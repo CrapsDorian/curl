@@ -1,0 +1,49 @@
+<testcase>
+<info>
+<keywords>
+MPTCP
+Multipath TCP
+mptcp
+</keywords>
+</info>
+
+<!-- Server-side configuration -->
+<reply>
+<data nocheck="yes">
+HTTP/1.1 200 OK
+Server: swsclose
+Content-Type: text/plain
+
+Ceci est une réponse de test MPTCP.
+</data>
+</reply>
+
+<!-- Client-side commands -->
+<client>
+<server>
+mptcp
+</server>
+<precheck>
+sh -c '[ "$(cat /proc/sys/net/mptcp/enabled 2>/dev/null)" = "1" ]'
+</precheck>
+<name>
+MPTCP GET Request
+</name>
+<command>
+--mptcp http://%HOSTIP:%HTTPPORT/%TESTNUMBER
+</command>
+</client>
+
+  <!-- Verification -->
+<verify>
+<protocol>
+GET /%TESTNUMBER HTTP/1.1
+Host: %HOSTIP:%HTTPPORT
+User-Agent: curl/%VERSION
+Accept: */*
+</protocol>
+<errorcode>
+      0
+</errorcode>
+</verify>
+</testcase>

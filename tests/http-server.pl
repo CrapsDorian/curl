@@ -56,6 +56,7 @@ my $connect;         # IP to connect to on CONNECT
 my $keepalive_secs;  # number of seconds to keep idle connections
 my $srcdir;
 my $gopher = 0;
+my $mptcp = 0;
 
 my $flags  = "";
 my $path   = '.';
@@ -114,6 +115,9 @@ while(@ARGV) {
     }
     elsif($ARGV[0] eq '--gopher') {
         $gopher = 1;
+    }
+    elsif($ARGV[0] eq '--mptcp') {
+        $mptcp = 1;
     }
     elsif($ARGV[0] eq '--port') {
         if($ARGV[1] =~ /^(\d+)$/) {
@@ -177,6 +181,7 @@ $flags .= "--pidfile \"$pidfile\" ".
     "--logdir \"$logdir\" ".
     "--portfile \"$portfile\" ";
 $flags .= "--gopher " if($gopher);
+$flags .= "--mptcp " if($mptcp);
 $flags .= "--connect $connect " if($connect);
 $flags .= "--keepalive $keepalive_secs " if($keepalive_secs);
 if($ipvnum eq 'unix') {

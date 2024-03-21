@@ -80,6 +80,11 @@ static enum {
 static bool use_gopher = FALSE;
 static int serverlogslocked = 0;
 static bool is_proxy = FALSE;
+static bool mptcp = FALSE;
+
+#ifndef IPPROTO_MPTCP
+#define IPPROTO_MPTCP 262
+#endif
 
 #define REQBUFSIZ (2*1024*1024)
 
@@ -1289,6 +1294,7 @@ static curl_socket_t connect_to(const char *ipaddr, unsigned short port)
   int rc = 0;
   const char *op_br = "";
   const char *cl_br = "";
+  int protocol = 0;
 
 #ifdef ENABLE_IPV6
   if(socket_domain == AF_INET6) {
@@ -1303,8 +1309,10 @@ static curl_socket_t connect_to(const char *ipaddr, unsigned short port)
   logmsg("about to connect to %s%s%s:%hu",
          op_br, ipaddr, cl_br, port);
 
+  if(mptcp)
+    protocol = IPPROTO_MPTCP;
 
-  serverfd = socket(socket_domain, SOCK_STREAM, 0);
+  serverfd = socket(socket_domain, SOCK_STREAM, protocol);
   if(CURL_SOCKET_BAD == serverfd) {
     error = SOCKERRNO;
     logmsg("Error creating socket for server connection: (%d) %s",
@@ -1969,7 +1977,7 @@ int main(int argc, char *argv[])
   const char *location_str = port_str;
   int keepalive_secs = 5;
   const char *protocol_type = "HTTP";
-
+  int protocol = 0;
   /* a default CONNECT port is basically pointless but still ... */
   size_t socket_idx;
 
@@ -2097,6 +2105,10 @@ int main(int argc, char *argv[])
         logmsg("Run as proxy, CONNECT to host %s", connecthost);
       }
     }
+    else if(!strcmp("--mptcp", argv[arg])){
+      arg++;
+      mptcp = TRUE;
+    }
     else {
       puts("Usage: sws [option]\n"
            " --version\n"
@@ -2110,7 +2122,8 @@ int main(int argc, char *argv[])
            " --port [port]\n"
            " --srcdir [path]\n"
            " --connect [ip4-addr]\n"
-           " --gopher");
+           " --gopher\n"
+           " --mpctcp");
       return 0;
     }
   }
@@ -2130,8 +2143,11 @@ int main(int argc, char *argv[])
   if(!req)
     goto sws_cleanup;
 
-  sock = socket(socket_domain, SOCK_STREAM, 0);
+  if(mptcp)
+    protocol = IPPROTO_MPTCP;
 
+  sock = socket(socket_domain, SOCK_STREAM, protocol);
+  
   all_sockets[0] = sock;
   num_sockets = 1;
 

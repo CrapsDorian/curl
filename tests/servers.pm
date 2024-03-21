@@ -232,7 +232,7 @@ sub init_serverpidfile_hash {
     }
   }
   for my $proto (('tftp', 'sftp', 'socks', 'ssh', 'rtsp', 'httptls',
-                  'dict', 'smb', 'smbs', 'telnet', 'mqtt')) {
+                  'dict', 'smb', 'smbs', 'telnet', 'mqtt', 'mptcp')) { 
     for my $ipvnum ((4, 6)) {
       for my $idnum ((1, 2)) {
         my $serv = servername_id($proto, $ipvnum, $idnum);
@@ -246,6 +246,7 @@ sub init_serverpidfile_hash {
     }
   }
   for my $proto (('http', 'imap', 'pop3', 'smtp', 'http/2', 'http/3')) {
+
     for my $ssl (('', 's')) {
       my $serv = servername_id("$proto$ssl", "unix", 1);
       my $pidf = server_pidfilename("$LOGDIR/$PIDDIR", "$proto$ssl",
@@ -346,7 +347,6 @@ sub serverfortest {
             $what[$i] = "$server$lnrest" if($tlsext);
         }
     }
-
     return &startservers(@what);
 }
 
@@ -1131,9 +1131,9 @@ sub runhttpserver {
     }
 
     my $server = servername_id($proto, $ipvnum, $idnum);
-
+    
     my $pidfile = $serverpidfile{$server};
-
+    
     # don't retry if the server doesn't work
     if ($doesntrun{$pidfile}) {
         return (2, 0, 0, 0);
@@ -2370,7 +2370,7 @@ sub startservers {
                 $run{'ftp-ipv6'}="$pid $pid2";
             }
         }
-        elsif($what eq "gopher") {
+        elsif($what eq "gopher") {           
             if($torture && $run{'gopher'} &&
                !responsive_http_server("gopher", $verbose, 0,
                                        protoport("gopher"))) {
@@ -2843,6 +2843,22 @@ sub startservers {
                 logmsg sprintf ("* pid neg TELNET => %d %d\n", $pid, $pid2)
                     if($verbose);
                 $run{'telnet'}="$pid $pid2";
+            }
+        }
+        elsif($what eq "mptcp") {
+            if($torture && $run{'mptcp'} &&
+               !responsive_mptcp_server($verbose)) {
+                if(stopserver('mptcp')) {
+                    return ("failed stopping unresponsive MPTCP server", 3);
+                }
+            }
+            if(!$run{'mptcp'}) {
+                ($serr, $pid, $pid2, $PORT{'mptcp'}) = runhttpserver("mptcp", $verbose, 0);
+                if($pid <= 0) {
+                    return ("failed starting MPTCP server", $serr);
+                }
+                logmsg sprintf("* pid mptcp => %d %d\n", $pid, $pid2) if($verbose);
+                $run{'mptcp'}="$pid $pid2";
             }
         }
         elsif($what eq "none") {

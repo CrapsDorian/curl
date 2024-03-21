@@ -590,7 +590,7 @@ sub singletest_startservers {
 
     # timestamp required servers verification start
     $$testtimings{"timesrvrini"} = Time::HiRes::time();
-
+    
     my $why;
     my $error;
     if (!$listonly) {

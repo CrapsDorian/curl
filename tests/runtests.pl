@@ -463,6 +463,9 @@ sub parseprotocols {
     # 'http-proxy' is used in test cases to do CONNECT through
     push @protocols, 'http-proxy';
 
+    # 'mptcp' is used in test cases to do MPTCP
+    push @protocols, 'mptcp';
+   
     # 'none' is used in test cases to mean no server
     push @protocols, 'none';
 }
