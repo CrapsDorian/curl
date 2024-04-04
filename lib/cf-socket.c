@@ -280,7 +280,19 @@ static CURLcode socket_open(struct Curl_easy *data,
   }
   else {
     /* opensocket callback not set, so simply create the socket now */
-    *sockfd = socket(addr->family, addr->socktype, addr->protocol);
+    int protocol = addr->protocol;
+
+    if(data->set.mptcp && protocol == IPPROTO_TCP)
+#if defined(__linux__)
+#  ifndef IPPROTO_MPTCP
+#  define IPPROTO_MPTCP 262
+#  endif
+      protocol = IPPROTO_MPTCP;
+#else
+      return CURLE_UNSUPPORTED_PROTOCOL;
+#endif
+
+    *sockfd = socket(addr->family, addr->socktype, protocol);
   }
 
   if(*sockfd == CURL_SOCKET_BAD)
@@ -1602,6 +1614,7 @@ CURLcode Curl_cf_tcp_create(struct Curl_cfilter **pcf,
     result = CURLE_OUT_OF_MEMORY;
     goto out;
   }
+
   cf_socket_ctx_init(ctx, ai, transport);
 
   result = Curl_cf_create(&cf, &Curl_cft_tcp, ctx);
