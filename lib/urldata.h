@@ -804,6 +804,7 @@ struct ldapconninfo;
 #define TRNSPRT_UDP 4
 #define TRNSPRT_QUIC 5
 #define TRNSPRT_UNIX 6
+#define TRNSPRT_MPTCP 7
 
 /*
  * The connectdata struct contains all fields and variables that should be
@@ -1879,6 +1880,7 @@ struct UserDefined {
 #ifdef USE_ECH
   int tls_ech;      /* TLS ECH configuration  */
 #endif
+  BIT(mptcp); /* enable MPTCP support */
 };
 
 #ifndef CURL_DISABLE_MIME

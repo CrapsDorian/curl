@@ -244,6 +244,13 @@ void Curl_sock_assign_addr(struct Curl_sockaddr_ex *dest,
     dest->socktype = SOCK_STREAM;
     dest->protocol = IPPROTO_IP;
     break;
+  case TRNSPRT_MPTCP:
+#ifndef IPPROTO_MPTCP
+#define IPPROTO_MPTCP 262
+#endif
+    dest->socktype = SOCK_STREAM;
+    dest->protocol = IPPROTO_MPTCP;
+    break;
   default: /* UDP and QUIC */
     dest->socktype = SOCK_DGRAM;
     dest->protocol = IPPROTO_UDP;
@@ -1602,6 +1609,16 @@ CURLcode Curl_cf_tcp_create(struct Curl_cfilter **pcf,
     result = CURLE_OUT_OF_MEMORY;
     goto out;
   }
+
+  if(data->set.mptcp) {
+#ifdef __linux__
+    transport = TRNSPRT_MPTCP;
+#else
+    result = CURLE_UNSUPPORTED_PROTOCOL;
+    goto out;
+#endif
+  }
+
   cf_socket_ctx_init(ctx, ai, transport);
 
   result = Curl_cf_create(&cf, &Curl_cft_tcp, ctx);
